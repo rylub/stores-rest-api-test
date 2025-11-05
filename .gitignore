@@ -1,1 +1,5 @@
 code/
+.idea/
+.venv/
+__pycache__/
+code/
