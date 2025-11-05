@@ -1,0 +1,2 @@
+FLASK_APP=starter_code.app:create_app
+FLASK_ENV=development

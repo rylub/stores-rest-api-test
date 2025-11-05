@@ -1,0 +1,89 @@
+# FILE: starter_code/tests/integration/integration_base_test.py
+"""
+Integration BaseTest using setUpClass:
+- One-time: build isolated Flask app + bind SQLAlchemy.
+- Per test: create/drop all tables.
+- No import of starter_code.app (avoids JWT/resources).
+"""
+from __future__ import annotations
+import unittest
+from flask import Flask
+from flask_restful import Api
+from flask_jwt_extended import JWTManager
+from starter_code.db import db
+
+
+class _ClientAdapter:
+    def __init__(self, flask_app: Flask) -> None:
+        self._app = flask_app
+        self._ctx_client = None
+
+    def __call__(self):
+        return self._app.test_client()
+
+    def __enter__(self):
+        self._ctx_client = self._app.test_client()
+        return self._ctx_client.__enter__()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return self._ctx_client.__exit__(exc_type, exc_val, exc_tb)
+
+
+class BaseTest(unittest.TestCase):
+    _app = None  # class-level app
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        # One-time app + db binding
+        cls._app = Flask(__name__)
+        cls._app.config.update(
+            TESTING=True,
+            SQLALCHEMY_DATABASE_URI="sqlite:///:memory:",  # in-memory
+            SQLALCHEMY_TRACK_MODIFICATIONS=False,
+        )
+
+        # --- JWT Config (required for flask_jwt_extended) ---
+        cls._app.config['JWT_SECRET_KEY'] = 'test123'
+        cls._app.config['JWT_TOKEN_LOCATION'] = ['headers']
+        cls._app.config['JWT_HEADER_TYPE'] = 'Bearer'
+        cls._app.config['JWT_COOKIE_CSRF_PROTECT'] = False
+        cls._app.config['JWT_CSRF_CHECK_FORM'] = False
+        JWTManager(cls._app)
+
+        # Initialize DB
+        db.init_app(cls._app)
+        api = Api(cls._app)
+
+        # 1️⃣ Import models first so SQLAlchemy relationships register correctly
+        from starter_code.models import store as _store  # noqa: F401
+        from starter_code.models import item as _item  # noqa: F401
+        from starter_code.models import user as _user  # noqa: F401
+
+        # 2️⃣ Then import all resources (avoid circular imports)
+        from starter_code.resources.user import UserRegister
+        from starter_code.resources.auth import Auth
+        from starter_code.resources.store import Store, StoreList
+        from starter_code.resources.item import Item, ItemList
+
+        # 3️⃣ Register all routes
+        api.add_resource(UserRegister, "/register")
+        api.add_resource(Auth, "/auth")
+        api.add_resource(Store, "/store/<string:name>")
+        api.add_resource(StoreList, "/stores")
+        api.add_resource(Item, "/item/<string:name>")
+        api.add_resource(ItemList, "/items")
+
+    def setUp(self) -> None:
+        # Fresh schema for each test
+        with self._app.app_context():
+            db.create_all()
+
+        self.app = _ClientAdapter(self._app)
+        self.app_context = self._app.app_context  # usage: with self.app_context():
+
+    def tearDown(self) -> None:
+        # Clean slate
+        assert self._app is not None
+        with self._app.app_context():
+            db.session.remove()
+            db.drop_all()

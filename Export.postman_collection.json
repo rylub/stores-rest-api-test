@@ -1,0 +1,352 @@
+{
+  "info": {
+    "_postman_id": "042d77c5-7028-49c3-8037-4e4a5959bdfe",
+    "name": "Stores REST API (Updated JWT)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+    "_exporter_id": "49773993"
+  },
+  "item": [
+    {
+      "name": "Export for PyCharm",
+      "item": [
+        {
+          "name": "/register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "let jsonData = pm.response.json();",
+                  "",
+                  "// --- Check response time ---",
+                  "pm.test(\"Response time is less than 200ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(200);",
+                  "});",
+                  "",
+                  "// --- Validate success message ---",
+                  "pm.test(\"User created successfully\", function () {",
+                  "    pm.expect(jsonData.message).to.eql(\"User created successfully\");",
+                  "});",
+                  "",
+                  "// --- Validate headers ---",
+                  "pm.test(\"Content-Type header is present\", function () {",
+                  "    pm.expect(pm.response.headers.has(\"Content-Type\")).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type is application/json\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"ryan\",\n    \"password\": \"test123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{url}}/register"
+          },
+          "response": []
+        },
+        {
+          "name": "/auth",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "let jsonData = pm.response.json();",
+                  "",
+                  "// --- Save token for later requests ---",
+                  "if (jsonData.access_token) {",
+                  "    pm.environment.set(\"access_token\", jsonData.access_token);",
+                  "    console.log(\"✅ Access token saved:\", jsonData.access_token);",
+                  "} else {",
+                  "    console.warn(\"⚠️ No access_token found in response.\");",
+                  "}",
+                  "",
+                  "// --- Validate status code ---",
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "",
+                  "// --- Validate body contains access_token ---",
+                  "pm.test(\"Body contains access_token\", function () {",
+                  "    pm.expect(jsonData).to.have.property(\"access_token\");",
+                  "});",
+                  "",
+                  "// --- Response time check ---",
+                  "pm.test(\"Response time is less than 300ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(300);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"ryan\",\n    \"password\": \"test123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{url}}/auth"
+          },
+          "response": []
+        },
+        {
+          "name": "/store/test_store",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "let jsonData = pm.response.json();",
+                  "",
+                  "pm.test(\"Store name is returned\", function () {",
+                  "    pm.expect(jsonData.name).to.eql(\"test_store\");",
+                  "});",
+                  "",
+                  "pm.test(\"Store ID is returned\", function () {",
+                  "    pm.expect(jsonData).to.have.property(\"id\");",
+                  "});",
+                  "",
+                  "pm.test(\"Store items are an empty list\", function () {",
+                  "    pm.expect(jsonData.items).to.be.an(\"array\").that.is.empty;",
+                  "});",
+                  "",
+                  "pm.test(\"Successful POST request\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is less than 200ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Content-Type is application/json\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "// --- Store the ID for later requests ---",
+                  "if (jsonData.id) {",
+                  "    pm.environment.set(\"store_id\", jsonData.id);",
+                  "    console.log(\"✅ store_id saved:\", jsonData.id);",
+                  "} else {",
+                  "    console.warn(\"⚠️ No ID found in response — backend may not return it.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{url}}/store/test_store"
+          },
+          "response": []
+        },
+        {
+          "name": "/item/test_item",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "let jsonData = pm.response.json();",
+                  "",
+                  "pm.test(\"Item name is returned\", function () {",
+                  "    pm.expect(jsonData.name).to.eql(\"test_item\");",
+                  "});",
+                  "",
+                  "pm.test(\"Item price is returned\", function () {",
+                  "    pm.expect(jsonData.price).to.eql(19.99);",
+                  "});",
+                  "",
+                  "pm.test(\"Successful POST request\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is less than 200ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 19.99,\n  \"store_id\": {{store_id}}\n}"
+            },
+            "url": "{{url}}/item/test_item"
+          },
+          "response": []
+        },
+        {
+          "name": "/stores",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "let jsonData = pm.response.json();",
+                  "",
+                  "pm.test(\"Store 'test_store' is returned\", function () {",
+                  "    pm.expect(jsonData.stores[0].name).to.eql(\"test_store\");",
+                  "});",
+                  "",
+                  "pm.test(\"Item 'test_item' is returned inside 'test_store'\", function () {",
+                  "    pm.expect(jsonData.stores[0].items[0].name).to.eql(\"test_item\");",
+                  "});",
+                  "",
+                  "pm.test(\"Item 'test_item' price is correct\", function () {",
+                  "    pm.expect(jsonData.stores[0].items[0].price).to.eql(19.99);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{url}}/stores"
+          },
+          "response": []
+        },
+        {
+          "name": "/item/test_item (DELETE)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "let jsonData = pm.response.json();",
+                  "",
+                  "pm.test(\"Item deleted\", function () {",
+                  "    pm.expect(jsonData.message).to.eql(\"Item deleted\");",
+                  "});",
+                  "",
+                  "pm.test(\"Successful DELETE request\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{url}}/item/test_item"
+          },
+          "response": []
+        },
+        {
+          "name": "/store/test_store (DELETE)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "let jsonData = pm.response.json();",
+                  "",
+                  "pm.test(\"Store deleted\", function () {",
+                  "    pm.expect(jsonData.message).to.eql(\"Store deleted\");",
+                  "});",
+                  "",
+                  "pm.test(\"Successful DELETE request\", function () {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{url}}/store/test_store"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
