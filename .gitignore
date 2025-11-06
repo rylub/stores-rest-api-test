@@ -1,5 +1,7 @@
-code/
-.idea/
 .venv/
 __pycache__/
-code/
+instance/
+*.pyc
+*.db
+*.DS_Store
+.idea/
