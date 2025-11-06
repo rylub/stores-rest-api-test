@@ -42,7 +42,7 @@ class StoreTest(BaseTest):
             'items': [],
         }
 
-        self.assertDictEqual(store.json(), expectedgit )
+        self.assertDictEqual(store.json(), expected)
 
     def test_store_json_with_item(self):
         with self.app_context():
