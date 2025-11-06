@@ -43,8 +43,9 @@ class StoreTest(BaseTest):
             item.save_to_db()
 
             expected = {
+                'id': 1,
                 'name': 'test',
                 'items': [{'name': 'test_item', 'price': 19.99, 'store_id': 1}]
             }
             self.assertDictEqual(store.json(), expected,
-                             "The store's dictionary does not match the expected outcome.")
+                                 "The store's dictionary does not match the expected outcome.")
